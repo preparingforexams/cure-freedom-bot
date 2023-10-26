@@ -1,0 +1,7 @@
+apiVersion: v2
+name: cure-freedom-bot
+description: cure people from freedom
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+icon: https://carstens.tech/helm_icon.png

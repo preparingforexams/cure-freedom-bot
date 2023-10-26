@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "cure-freedom-bot"
+version = "0.1.0"
+description = ""
+authors = ["Blindfolded Surgery <team@blindfolded.surgery>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+httpx = "^0.24.1"
+python-telegram-bot = "^20.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100

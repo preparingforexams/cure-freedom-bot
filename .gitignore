@@ -1,0 +1,6 @@
+/target
+
+.idea
+*.iml
+
+src/cure-freedom-bot/__pycache__
