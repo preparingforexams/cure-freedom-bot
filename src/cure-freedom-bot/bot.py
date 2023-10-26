@@ -2,7 +2,10 @@ import re
 from typing import Callable, Tuple, Union
 
 from telegram import Update
+from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
+
+from utils import escape_markdown
 
 
 def convert_number(match: re.Match, calc_fn: Callable[[float], float], unit_name: str) -> str:
@@ -143,6 +146,13 @@ async def cure(update: Update, context: ContextTypes.DEFAULT_TYPE):
     unit = find_matching_unit(args)
     if unit is None:
         await update.effective_message.reply_text("couldn't find a valid unit to convert")
+    elif match := re.match(regex_match_number_with_prefix, args, re.IGNORECASE):
+        msg = ""
+        for name, unit in units.items():
+            msg += f"__{name}__\n"
+            msg += escape_markdown(unit["process"](match)) + "\n\n"
+
+        await update.effective_message.reply_text(msg, parse_mode=ParseMode.MARKDOWN_V2)
     else:
         match, unit = unit
         message = unit["process"](match)
