@@ -21,31 +21,43 @@ def convert_number(match: re.Match, calc_fn: Callable[[float], float], unit_name
         return f"couldn't parse number (`{value}`) as float"
 
 
-def convert_cups(match: re.Match) -> str:
-    cups = [
-        convert_number(match, lambda n: n * 227, " gram (butter)"),
-        convert_number(match, lambda n: n * 125, " gram (all purpose flour)"),
-        convert_number(match, lambda n: n * 136, " gram (bread flour)"),
-        convert_number(match, lambda n: n * 85, " gram (cocoa powder)"),
-        convert_number(match, lambda n: n * 120, " gram (powdered sugar)"),
-        convert_number(match, lambda n: n * 95, " gram (rolled oats)"),
-        convert_number(match, lambda n: n * 200, " gram (granulated sugar)"),
-        convert_number(match, lambda n: n * 220, " gram (packed brown sugar)"),
-        convert_number(match, lambda n: n * 185, " gram (uncooked long grain rice)"),
-        convert_number(match, lambda n: n * 200, " gram (uncooked short grain rice)"),
-        convert_number(match, lambda n: n * 340, " gram (honey, molasse, syrup)"),
-        convert_number(match, lambda n: n * 237, " gram (water)"),
-        convert_number(match, lambda n: n * 249, " gram (whole milk)"),
-    ]
+def multiply_by_helper(factor: float) -> Callable[[float], float]:
+    return lambda n: n * factor
 
-    return "\n".join(cups)
+
+def convert_cups(match: re.Match) -> str:
+    results = []
+    number_result = convert_number(match, lambda n: n, "")
+    try:
+        number = float(number_result)
+    except ValueError:
+        return number_result
+
+    for factor, unit_name in [
+        (227, " gram (butter)"),
+        (125, " gram (all purpose flour)"),
+        (136, " gram (bread flour)"),
+        (85, " gram (cocoa powder)"),
+        (120, " gram (powdered sugar)"),
+        (95, " gram (rolled oats)"),
+        (200, " gram (granulated sugar)"),
+        (220, " gram (packed brown sugar)"),
+        (185, " gram (uncooked long grain rice)"),
+        (200, " gram (uncooked short grain rice)"),
+        (340, " gram (honey, molasse, syrup)"),
+        (237, " gram (water)"),
+        (249, " gram (whole milk)"),
+    ]:
+        results.append(f"{number * factor:.2f}{unit_name}")
+
+    return "\n".join(results)
 
 
 def convert_tablespoon(match: re.Match) -> str:
     return "\n".join(
         [
-            convert_number(match, lambda n: n * 15, "gram"),
-            convert_number(match, lambda n: n * 14.7867648, "ml"),
+            convert_number(match, multiply_by_helper(15), "gram"),
+            convert_number(match, multiply_by_helper(14.7867648), "ml"),
         ]
     )
 
@@ -53,15 +65,15 @@ def convert_tablespoon(match: re.Match) -> str:
 def convert_teaspoon(match: re.Match) -> str:
     return "\n".join(
         [
-            convert_number(match, lambda n: n * 4.18, "gram"),
-            convert_number(match, lambda n: n * 5, "ml"),
+            convert_number(match, multiply_by_helper(4.18), "gram"),
+            convert_number(match, multiply_by_helper(5), "ml"),
         ]
     )
 
 
 def convert_ounces(match: re.Match) -> str:
-    fluid = convert_number(match, lambda n: n * 29.57353, "ml")
-    mass = convert_number(match, lambda n: n * 28.34952, "gram")
+    fluid = convert_number(match, multiply_by_helper(29.57353), "ml")
+    mass = convert_number(match, multiply_by_helper(28.34952), "gram")
 
     return f"{fluid}\n{mass}"
 
@@ -78,13 +90,13 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
         "regex": re.compile(
             rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(:?\"|in(:?ch(:?es)?)?))"
         ),
-        "process": lambda m: convert_number(m, lambda n: n * 2.54, "cm"),
+        "process": lambda m: convert_number(m, multiply_by_helper(2.54), "cm"),
     },
     "pound": {
         "regex": re.compile(
             rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(:?pound|lb)(:?s)?)"
         ),
-        "process": lambda m: convert_number(m, lambda n: n * 453.59237, "gram"),
+        "process": lambda m: convert_number(m, multiply_by_helper(453.59237), "gram"),
     },
     "ounces": {
         "regex": re.compile(
@@ -94,7 +106,7 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
     },
     "feet": {
         "regex": re.compile(rf"{regex_match_number_with_prefix}\s*(?P<unit_name>ft|feet)"),
-        "process": lambda m: convert_number(m, lambda n: n * 0.3048, "m"),
+        "process": lambda m: convert_number(m, multiply_by_helper(0.3048), "m"),
     },
     "cups": {
         "regex": re.compile(rf"{regex_match_number_with_prefix}\s*(?P<unit_name>cup|endgegner)"),
@@ -110,11 +122,11 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
     },
     "mile": {
         "regex": re.compile(rf"{regex_match_number_with_prefix}\s*(?P<unit_name>mi(?:le)?)"),
-        "process": lambda m: convert_number(m, lambda n: n * 1.609344, "km"),
+        "process": lambda m: convert_number(m, multiply_by_helper(1.609344), "km"),
     },
     "yard": {
         "regex": re.compile(rf"{regex_match_number_with_prefix}\s*(?P<unit_name>yd|yard)"),
-        "process": lambda m: convert_number(m, lambda n: n * 0.9144, "m"),
+        "process": lambda m: convert_number(m, multiply_by_helper(0.9144), "m"),
     },
 }
 
