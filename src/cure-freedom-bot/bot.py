@@ -85,6 +85,13 @@ def convert_ounces(match: re.Match) -> str:
     return f"{fluid}\n{mass}"
 
 
+def convert_inches(match: re.Match) -> str:
+    cm = convert_number(match, multiply_by_helper(2.54), "cm")
+    tahocker = convert_number(match, lambda n: (n * 2.54) / 159.5, "tahocker")
+
+    return f"{cm}\n{tahocker}"
+
+
 def convert_aldi_beer(match: re.Match) -> str:
     multiplier = 1
 
@@ -117,7 +124,7 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
             rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(:?\"|in(:?ch(:?es)?)?))",
             re.IGNORECASE,
         ),
-        "process": lambda m: convert_number(m, multiply_by_helper(2.54), "cm"),
+        "process": convert_inches,
     },
     "pound": {
         "regex": re.compile(
