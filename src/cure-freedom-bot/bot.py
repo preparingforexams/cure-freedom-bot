@@ -1,6 +1,7 @@
 import re
 from typing import Callable, Tuple, Union
 
+import currency_converter
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
@@ -116,6 +117,16 @@ def convert_aldi_beer(match: re.Match) -> str:
     return result + " [Aldi Bier](https://song.link/t/120323761)"
 
 
+def convert_dollar(match: re.Match) -> str:
+    currency_url = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip"
+
+    cc = currency_converter.CurrencyConverter(currency_file=currency_url)
+    value = float(convert_number(match, lambda n: n, ""))
+    euro = cc.convert(value, "USD", "EUR")
+
+    return f"{euro:.2f}€"
+
+
 regex_match_number_with_prefix = r"(?P<number>[-+]?\d+(:?(:?,|\.)\d+)?)"
 
 units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
@@ -185,6 +196,12 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
             rf".*?{regex_match_number_with_prefix}\s*(?P<unit_name>(€|euro|ct|cent))", re.IGNORECASE
         ),
         "process": convert_aldi_beer,
+    },
+    "USD": {
+        "regex": re.compile(
+            rf".*?{regex_match_number_with_prefix}\s*(?P<unit_name>(\$|usd|dollar))", re.IGNORECASE
+        ),
+        "process": convert_dollar,
     },
 }
 

@@ -11,6 +11,7 @@ python = "^3.11"
 httpx = "^0.24.1"
 python-telegram-bot = "^20.4"
 beautifulsoup4 = "^4.12.2"
+currencyconverter = "^0.17.12"
 
 [build-system]
 requires = ["poetry-core"]
