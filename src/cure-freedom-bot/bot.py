@@ -10,13 +10,21 @@ import aldi
 from utils import escape_markdown
 
 
-def convert_number(match: re.Match, calc_fn: Callable[[float], float], unit_name: str) -> str:
+def get_number_from_match(match: re.Match) -> float | str:
     value = match.group("number")
     if value is None:
         return "couldn't find a valid number"
     value = value.replace(",", ".")
+
     try:
-        freedom = float(value)
+        return float(value)
+    except ValueError:
+        return f"couldn't parse number (`{value}`) as float"
+
+
+def convert_number(match: re.Match, calc_fn: Callable[[float], float], unit_name: str) -> str:
+    freedom = get_number_from_match(match)
+    if isinstance(freedom, float):
         result = calc_fn(freedom)
         if "Aldi Bier" in unit_name:
             result = f"{result:.3f}"
@@ -26,8 +34,8 @@ def convert_number(match: re.Match, calc_fn: Callable[[float], float], unit_name
             return unit_name.format(result)
         else:
             return f"{result} {unit_name}"
-    except ValueError:
-        return f"couldn't parse number (`{value}`) as float"
+    else:
+        return freedom
 
 
 def multiply_by_helper(factor: float) -> Callable[[float], float]:
@@ -36,11 +44,9 @@ def multiply_by_helper(factor: float) -> Callable[[float], float]:
 
 def convert_cups(match: re.Match) -> str:
     results = []
-    number_result = convert_number(match, lambda n: n, "")
-    try:
-        number = float(number_result)
-    except ValueError:
-        return number_result
+    number = get_number_from_match(match)
+    if isinstance(number, str):
+        return number
 
     for factor, unit_name in [
         (227, "gram (butter)"),
@@ -121,7 +127,9 @@ def convert_dollar(match: re.Match) -> str:
     currency_url = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip"
 
     cc = currency_converter.CurrencyConverter(currency_file=currency_url)
-    value = float(convert_number(match, lambda n: n, ""))
+    value = get_number_from_match(match)
+    if isinstance(value, str):
+        return value
     euro = cc.convert(value, "USD", "EUR")
 
     return f"{euro:.2f}€"
