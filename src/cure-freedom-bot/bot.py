@@ -2,10 +2,7 @@ import re
 from typing import Callable, Tuple, Union
 
 from telegram import Update
-from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
-
-from utils import escape_markdown
 
 
 def convert_number(match: re.Match, calc_fn: Callable[[float], float], unit_name: str) -> str:
@@ -16,7 +13,11 @@ def convert_number(match: re.Match, calc_fn: Callable[[float], float], unit_name
     try:
         freedom = float(value)
         result = calc_fn(freedom)
-        return f"{result:.2f}{unit_name}"
+        result = f"{result:.2f}"
+        if "{}" in unit_name:
+            return unit_name.format(result)
+        else:
+            return f"{result} {unit_name}"
     except ValueError:
         return f"couldn't parse number (`{value}`) as float"
 
@@ -34,19 +35,19 @@ def convert_cups(match: re.Match) -> str:
         return number_result
 
     for factor, unit_name in [
-        (227, " gram (butter)"),
-        (125, " gram (all purpose flour)"),
-        (136, " gram (bread flour)"),
-        (85, " gram (cocoa powder)"),
-        (120, " gram (powdered sugar)"),
-        (95, " gram (rolled oats)"),
-        (200, " gram (granulated sugar)"),
-        (220, " gram (packed brown sugar)"),
-        (185, " gram (uncooked long grain rice)"),
-        (200, " gram (uncooked short grain rice)"),
-        (340, " gram (honey, molasse, syrup)"),
-        (237, " gram (water)"),
-        (249, " gram (whole milk)"),
+        (227, "gram (butter)"),
+        (125, "gram (all purpose flour)"),
+        (136, "gram (bread flour)"),
+        (85, "gram (cocoa powder)"),
+        (120, "gram (powdered sugar)"),
+        (95, "gram (rolled oats)"),
+        (200, "gram (granulated sugar)"),
+        (220, "gram (packed brown sugar)"),
+        (185, "gram (uncooked long grain rice)"),
+        (200, "gram (uncooked short grain rice)"),
+        (340, "gram (honey, molasse, syrup)"),
+        (237, "gram (water)"),
+        (249, "gram (whole milk)"),
     ]:
         results.append(f"{number * factor:.2f}{unit_name}")
 
@@ -78,7 +79,19 @@ def convert_ounces(match: re.Match) -> str:
     return f"{fluid}\n{mass}"
 
 
+def convert_aldi_beer(match: re.Match) -> str:
+    multiplier = 1
+
+    if match.group("unit_name").strip().lower() in ("euro", "€"):
+        multiplier = 100
+
+    return convert_number(
+        match, lambda n: (n * multiplier) / 29, "Boah Bruder, das sind ja {} Aldi Bier"
+    )
+
+
 regex_match_number_with_prefix = r"(?P<number>[-+]?\d+(:?(:?,|\.)\d+)?)"
+
 units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
     "fahrenheit": {
         "regex": re.compile(
@@ -88,45 +101,64 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
     },
     "inches": {
         "regex": re.compile(
-            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(:?\"|in(:?ch(:?es)?)?))"
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(:?\"|in(:?ch(:?es)?)?))",
+            re.IGNORECASE,
         ),
         "process": lambda m: convert_number(m, multiply_by_helper(2.54), "cm"),
     },
     "pound": {
         "regex": re.compile(
-            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(:?pound|lb)(:?s)?)"
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(:?pound|lb)(:?s)?)", re.IGNORECASE
         ),
         "process": lambda m: convert_number(m, multiply_by_helper(453.59237), "gram"),
     },
     "ounces": {
         "regex": re.compile(
-            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(:?fl\.)?oz|ounces)"
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(:?fl\.)?oz|ounces)", re.IGNORECASE
         ),
         "process": convert_ounces,
     },
     "feet": {
-        "regex": re.compile(rf"{regex_match_number_with_prefix}\s*(?P<unit_name>ft|feet)"),
+        "regex": re.compile(
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>ft|feet)", re.IGNORECASE
+        ),
         "process": lambda m: convert_number(m, multiply_by_helper(0.3048), "m"),
     },
     "cups": {
-        "regex": re.compile(rf"{regex_match_number_with_prefix}\s*(?P<unit_name>cup|endgegner)"),
+        "regex": re.compile(
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>cup|endgegner)", re.IGNORECASE
+        ),
         "process": convert_cups,
     },
     "tablespoon": {
-        "regex": re.compile(rf"{regex_match_number_with_prefix}\s*(?P<unit_name>tablespoon|tbsp)"),
+        "regex": re.compile(
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>tablespoon|tbsp)", re.IGNORECASE
+        ),
         "process": convert_tablespoon,
     },
     "teaspoon": {
-        "regex": re.compile(rf"{regex_match_number_with_prefix}\s*(?P<unit_name>teaspoon|tsp)"),
+        "regex": re.compile(
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>teaspoon|tsp)", re.IGNORECASE
+        ),
         "process": convert_teaspoon,
     },
     "mile": {
-        "regex": re.compile(rf"{regex_match_number_with_prefix}\s*(?P<unit_name>mi(?:le)?)"),
+        "regex": re.compile(
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>mi(?:le)?)", re.IGNORECASE
+        ),
         "process": lambda m: convert_number(m, multiply_by_helper(1.609344), "km"),
     },
     "yard": {
-        "regex": re.compile(rf"{regex_match_number_with_prefix}\s*(?P<unit_name>yd|yard)"),
+        "regex": re.compile(
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>yd|yard)", re.IGNORECASE
+        ),
         "process": lambda m: convert_number(m, multiply_by_helper(0.9144), "m"),
+    },
+    "aldi beer": {
+        "regex": re.compile(
+            rf"{regex_match_number_with_prefix}(?P<unit_name>\s*(€|euro|ct|cent))", re.IGNORECASE
+        ),
+        "process": convert_aldi_beer,
     },
 }
 
@@ -139,7 +171,7 @@ def match_unit(unit: dict, args: str) -> re.Match | None:
     return None
 
 
-def find_matching_unit(args: str) -> Tuple[re.Match, dict] | None:
+def find_matching_unit(args: str) -> Tuple[re.Match, dict] | Tuple[None, None]:
     fmatch, funit = None, None
     longest_unitname_match = 0
 
@@ -155,18 +187,10 @@ def find_matching_unit(args: str) -> Tuple[re.Match, dict] | None:
 
 async def cure(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = " ".join(context.args)
-    unit = find_matching_unit(args)
-    if unit is None:
+    match, unit = find_matching_unit(args)
+    if match is None or unit is None:
         await update.effective_message.reply_text("couldn't find a valid unit to convert")
-    elif match := re.match(regex_match_number_with_prefix, args, re.IGNORECASE):
-        msg = ""
-        for name, unit in units.items():
-            msg += f"__{name}__\n"
-            msg += escape_markdown(unit["process"](match)) + "\n\n"
-
-        await update.effective_message.reply_text(msg, parse_mode=ParseMode.MARKDOWN_V2)
     else:
-        match, unit = unit
         message = unit["process"](match)
         await update.effective_message.reply_text(message)
 
