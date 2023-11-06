@@ -1,12 +1,12 @@
 import json
 
-import requests
+import httpx
 from bs4 import BeautifulSoup
 
 
 def get_karlskrone_price() -> float:
     url = "https://www.aldi-nord.de/sortiment/getraenke/bier/pilsener-0313-1-1.article.html"
-    response = requests.get(url)
+    response = httpx.get(url, follow_redirects=True)
     bs4 = BeautifulSoup(response.content, "html.parser")
     element = bs4.find("div", attrs={"data-t-name": "ArticleIntro"})
     data_article = element.attrs["data-article"]
