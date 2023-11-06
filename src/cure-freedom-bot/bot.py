@@ -2,7 +2,10 @@ import re
 from typing import Callable, Tuple, Union
 
 from telegram import Update
+from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
+
+from utils import escape_markdown
 
 
 def convert_number(match: re.Match, calc_fn: Callable[[float], float], unit_name: str) -> str:
@@ -13,7 +16,10 @@ def convert_number(match: re.Match, calc_fn: Callable[[float], float], unit_name
     try:
         freedom = float(value)
         result = calc_fn(freedom)
-        result = f"{result:.2f}"
+        if "Aldi Bier" in unit_name:
+            result = f"{result:.3f}"
+        else:
+            result = f"{result:.2f}"
         if "{}" in unit_name:
             return unit_name.format(result)
         else:
@@ -85,8 +91,15 @@ def convert_aldi_beer(match: re.Match) -> str:
     if match.group("unit_name").strip().lower() in ("euro", "€"):
         multiplier = 100
 
-    return convert_number(
-        match, lambda n: (n * multiplier) / 29, "Boah Bruder, das sind ja {} Aldi Bier"
+    return (
+        escape_markdown(
+            convert_number(
+                match,
+                lambda n: (n * multiplier) / 29,
+                "Boah Bruder, das sind ja {}",
+            )
+        )
+        + " [Aldi Bier](https://song.link/t/120323761)"
     )
 
 
@@ -156,7 +169,7 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
     },
     "aldi beer": {
         "regex": re.compile(
-            rf"{regex_match_number_with_prefix}(?P<unit_name>\s*(€|euro|ct|cent))", re.IGNORECASE
+            rf".*?{regex_match_number_with_prefix}\s*(?P<unit_name>(€|euro|ct|cent))", re.IGNORECASE
         ),
         "process": convert_aldi_beer,
     },
@@ -192,7 +205,12 @@ async def cure(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.effective_message.reply_text("couldn't find a valid unit to convert")
     else:
         message = unit["process"](match)
-        await update.effective_message.reply_text(message)
+        if "Aldi Bier" in message:
+            await update.effective_message.reply_text(
+                message, parse_mode=ParseMode.MARKDOWN_V2, disable_web_page_preview=True
+            )
+        else:
+            await update.effective_message.reply_text(message)
 
 
 async def supported_units(update: Update, _: ContextTypes.DEFAULT_TYPE):
