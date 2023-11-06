@@ -5,6 +5,7 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
+import aldi
 from utils import escape_markdown
 
 
@@ -98,16 +99,21 @@ def convert_aldi_beer(match: re.Match) -> str:
     if match.group("unit_name").strip().lower() in ("euro", "€"):
         multiplier = 100
 
-    return (
-        escape_markdown(
-            convert_number(
-                match,
-                lambda n: (n * multiplier) / 29,
-                "Boah Bruder, das sind ja {}",
-            )
+    result = escape_markdown(
+        convert_number(
+            match,
+            lambda n: (n * multiplier) / 29,
+            "Boah Bruder, das sind ja {}",
         )
-        + " [Aldi Bier](https://song.link/t/120323761)"
     )
+    try:
+        current_price = aldi.get_karlskrone_price()
+        result += escape_markdown(
+            convert_number(match, lambda n: (n * multiplier) / (current_price * 100), " ({})")
+        )
+    except:
+        pass
+    return result + " [Aldi Bier](https://song.link/t/120323761)"
 
 
 regex_match_number_with_prefix = r"(?P<number>[-+]?\d+(:?(:?,|\.)\d+)?)"
