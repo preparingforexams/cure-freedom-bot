@@ -223,10 +223,14 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
             rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(ft|feet)(\^?2|\u00b2))",
             re.IGNORECASE,
         ),
-        "process": lambda m: convert_number(
-            m, multiply_by_helper(0.09290304), "m\u00b2", escape_md=True
+        "process": lambda m: convert_number(m, multiply_by_helper(0.09290304), "m\u00b2"),
+    },
+    "miles squared": {
+        "regex": re.compile(
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(mi|mile)(\^?2|\u00b2))",
+            re.IGNORECASE,
         ),
-        "parse_mode": ParseMode.MARKDOWN_V2,
+        "process": lambda m: convert_number(m, multiply_by_helper(2.589988), "km\u00b2"),
     },
 }
 
