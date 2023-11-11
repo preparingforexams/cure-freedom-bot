@@ -22,8 +22,11 @@ def get_number_from_match(match: re.Match) -> float | str:
         return f"couldn't parse number (`{value}`) as float"
 
 
-def convert_number(match: re.Match, calc_fn: Callable[[float], float], unit_name: str) -> str:
+def convert_number(
+    match: re.Match, calc_fn: Callable[[float], float], unit_name: str, escape_md: bool = False
+) -> str:
     freedom = get_number_from_match(match)
+    result = freedom
     if isinstance(freedom, float):
         result = calc_fn(freedom)
         if "Aldi Bier" in unit_name:
@@ -31,11 +34,14 @@ def convert_number(match: re.Match, calc_fn: Callable[[float], float], unit_name
         else:
             result = f"{result:.2f}"
         if "{}" in unit_name:
-            return unit_name.format(result)
+            result = unit_name.format(result)
         else:
-            return f"{result} {unit_name}"
+            result = f"{result} {unit_name}"
+
+    if escape_md:
+        return escape_markdown(result)
     else:
-        return freedom
+        return result
 
 
 def multiply_by_helper(factor: float) -> Callable[[float], float]:
@@ -204,6 +210,7 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
             rf".*?{regex_match_number_with_prefix}\s*(?P<unit_name>(€|euro|ct|cent))", re.IGNORECASE
         ),
         "process": convert_aldi_beer,
+        "parse_mode": ParseMode.MARKDOWN_V2,
     },
     "USD": {
         "regex": re.compile(
@@ -213,9 +220,13 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
     },
     "feet squared": {
         "regex": re.compile(
-            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(ft|feet)\^?2)", re.IGNORECASE
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(ft|feet)(\^?2|\u00b2))",
+            re.IGNORECASE,
         ),
-        "process": lambda m: convert_number(m, multiply_by_helper(0.09290304), "m"),
+        "process": lambda m: convert_number(
+            m, multiply_by_helper(0.09290304), "m\u00b2", escape_md=True
+        ),
+        "parse_mode": ParseMode.MARKDOWN_V2,
     },
 }
 
@@ -249,12 +260,12 @@ async def cure(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.effective_message.reply_text("couldn't find a valid unit to convert")
     else:
         message = unit["process"](match)
-        if "Aldi Bier" in message:
+        if "parse_mode" in unit and unit["parse_mode"] is not None:
             await update.effective_message.reply_text(
-                message, parse_mode=ParseMode.MARKDOWN_V2, disable_web_page_preview=True
+                message, parse_mode=unit["parse_mode"], disable_web_page_preview=True
             )
         else:
-            await update.effective_message.reply_text(message)
+            await update.effective_message.reply_text(message, disable_web_page_preview=True)
 
 
 async def supported_units(update: Update, _: ContextTypes.DEFAULT_TYPE):
