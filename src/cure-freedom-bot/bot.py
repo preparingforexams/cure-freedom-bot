@@ -23,17 +23,19 @@ def get_number_from_match(match: re.Match) -> float | str:
 
 
 def convert_number(
-    match: re.Match, calc_fn: Callable[[float], float], unit_name: str, escape_md: bool = False
+    match: re.Match,
+    calc_fn: Callable[[float], float],
+    unit_name: str,
+    escape_md: bool = False,
+    format_result: bool = False,
+    rounding_length: int = 2,
 ) -> str:
     freedom = get_number_from_match(match)
     result = freedom
     if isinstance(freedom, float):
         result = calc_fn(freedom)
-        if "Aldi Bier" in unit_name:
-            result = f"{result:.3f}"
-        else:
-            result = f"{result:.2f}"
-        if "{}" in unit_name:
+        result = f"{result:.{rounding_length}f}"
+        if format_result:
             result = unit_name.format(result)
         else:
             result = f"{result} {unit_name}"
@@ -117,12 +119,20 @@ def convert_aldi_beer(match: re.Match) -> str:
             match,
             lambda n: (n * multiplier) / 29,
             "Boah Bruder, das sind ja {}",
+            format_result=True,
+            rounding_length=3,
         )
     )
     try:
         current_price = aldi.get_karlskrone_price()
         result += escape_markdown(
-            convert_number(match, lambda n: (n * multiplier) / (current_price * 100), " ({})")
+            convert_number(
+                match,
+                lambda n: (n * multiplier) / (current_price * 100),
+                " ({})",
+                format_result=True,
+                rounding_length=3,
+            )
         )
     except:
         pass
