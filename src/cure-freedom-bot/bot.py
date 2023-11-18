@@ -6,6 +6,7 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
+from constants import *
 import aldi
 from utils import escape_markdown
 
@@ -61,19 +62,19 @@ def convert_cups(match: re.Match) -> str:
         return number
 
     for factor, unit_name in [
-        (227, "gram (butter)"),
-        (125, "gram (all purpose flour)"),
-        (136, "gram (bread flour)"),
-        (85, "gram (cocoa powder)"),
-        (120, "gram (powdered sugar)"),
-        (95, "gram (rolled oats)"),
-        (200, "gram (granulated sugar)"),
-        (220, "gram (packed brown sugar)"),
-        (185, "gram (uncooked long grain rice)"),
-        (200, "gram (uncooked short grain rice)"),
-        (340, "gram (honey, molasse, syrup)"),
-        (237, "gram (water)"),
-        (249, "gram (whole milk)"),
+        (CUPS_TO_GRAM_BUTTER, "gram (butter)"),
+        (CUPS_TO_GRAM_ALL_PURPOSE_FLOUR, "gram (all purpose flour)"),
+        (CUPS_TO_GRAM_BREAD_FLOUR, "gram (bread flour)"),
+        (CUPS_TO_GRAM_COCOA_POWDER, "gram (cocoa powder)"),
+        (CUPS_TO_GRAM_POWDERED_SUGAR, "gram (powdered sugar)"),
+        (CUPS_TO_GRAM_ROLLED_OATS, "gram (rolled oats)"),
+        (CUPS_TO_GRAM_GRANULATED_SUGAR, "gram (granulated sugar)"),
+        (CUPS_TO_GRAM_PACKED_BROWN_SUGAR, "gram (packed brown sugar)"),
+        (CUPS_TO_GRAM_UNCOOKED_LONG_GRAIN_RICE, "gram (uncooked long grain rice)"),
+        (CUPS_TO_GRAM_UNCOOKED_SHORT_GRAIN_RICE, "gram (uncooked short grain rice)"),
+        (CUPS_TO_GRAM_HONEY_MOLASSE_SYRUP, "gram (honey, molasse, syrup)"),
+        (CUPS_TO_GRAM_WATER, "gram (water)"),
+        (CUPS_TO_GRAM_WHOLE_MILK, "gram (whole milk)"),
     ]:
         results.append(f"{number * factor:.2f}{unit_name}")
 
@@ -83,8 +84,8 @@ def convert_cups(match: re.Match) -> str:
 def convert_tablespoon(match: re.Match) -> str:
     return "\n".join(
         [
-            convert_number(match, multiply_by_helper(15), "gram"),
-            convert_number(match, multiply_by_helper(14.7867648), "ml"),
+            convert_number(match, multiply_by_helper(TABLESPOON_TO_GRAM), "gram"),
+            convert_number(match, multiply_by_helper(TABLESPOON_TO_MILLILITER), "ml"),
         ]
     )
 
@@ -92,15 +93,15 @@ def convert_tablespoon(match: re.Match) -> str:
 def convert_teaspoon(match: re.Match) -> str:
     return "\n".join(
         [
-            convert_number(match, multiply_by_helper(4.18), "gram"),
-            convert_number(match, multiply_by_helper(5), "ml"),
+            convert_number(match, multiply_by_helper(TEASPOON_TO_GRAM), "gram"),
+            convert_number(match, multiply_by_helper(TEASPOON_TO_MILLILITER), "ml"),
         ]
     )
 
 
 def convert_ounces(match: re.Match) -> str:
-    fluid = convert_number(match, multiply_by_helper(29.57353), "ml")
-    mass = convert_number(match, multiply_by_helper(28.34952), "gram")
+    fluid = convert_number(match, multiply_by_helper(OUNCES_TO_MILLILITER), "ml")
+    mass = convert_number(match, multiply_by_helper(OUNCES_TO_GRAM), "gram")
 
     return f"{fluid}\n{mass}"
 
@@ -110,7 +111,7 @@ def to_tahocker(n: int | float) -> float:
 
 
 def convert_inches(match: re.Match) -> str:
-    cm = convert_number(match, multiply_by_helper(2.54), "cm")
+    cm = convert_number(match, multiply_by_helper(INCHES_TO_CENTIMETER), "cm")
     tahocker = convert_number(match, to_tahocker, "tahocker")
 
     return f"{cm}\n{tahocker}"
@@ -194,7 +195,7 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
         "regex": re.compile(
             rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(:?pound|lb)(:?s)?)", re.IGNORECASE
         ),
-        "process": lambda m: convert_number(m, multiply_by_helper(453.59237), "gram"),
+        "process": lambda m: convert_number(m, multiply_by_helper(POUND_TO_GRAM), "gram"),
     },
     "ounces": {
         "regex": re.compile(
@@ -206,7 +207,7 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
         "regex": re.compile(
             rf"{regex_match_number_with_prefix}\s*(?P<unit_name>ft|feet)", re.IGNORECASE
         ),
-        "process": lambda m: convert_number(m, multiply_by_helper(0.3048), "m"),
+        "process": lambda m: convert_number(m, multiply_by_helper(FEET_TO_METER), "m"),
     },
     "cups": {
         "regex": re.compile(
@@ -230,13 +231,13 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
         "regex": re.compile(
             rf"{regex_match_number_with_prefix}\s*(?P<unit_name>mi(?:le)?)", re.IGNORECASE
         ),
-        "process": lambda m: convert_number(m, multiply_by_helper(1.609344), "km"),
+        "process": lambda m: convert_number(m, multiply_by_helper(MILE_TO_KILOMETER), "km"),
     },
     "yard": {
         "regex": re.compile(
             rf"{regex_match_number_with_prefix}\s*(?P<unit_name>yd|yard)", re.IGNORECASE
         ),
-        "process": lambda m: convert_number(m, multiply_by_helper(0.9144), "m"),
+        "process": lambda m: convert_number(m, multiply_by_helper(YARD_TO_METER), "m"),
     },
     "aldi beer": {
         "regex": re.compile(
@@ -256,14 +257,18 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
             rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(ft|feet)(\^?2|\u00b2))",
             re.IGNORECASE,
         ),
-        "process": lambda m: convert_number(m, multiply_by_helper(0.09290304), "m\u00b2"),
+        "process": lambda m: convert_number(
+            m, multiply_by_helper(FEET_SQUARED_TO_METER_SQUARED), "m\u00b2"
+        ),
     },
     "miles squared": {
         "regex": re.compile(
             rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(mi|mile)(\^?2|\u00b2))",
             re.IGNORECASE,
         ),
-        "process": lambda m: convert_number(m, multiply_by_helper(2.589988), "km\u00b2"),
+        "process": lambda m: convert_number(
+            m, multiply_by_helper(MILE_SQUARED_TO_KILOMETER_SQUARED), "km\u00b2"
+        ),
     },
     "non freedom units": {
         "regex": re.compile(
