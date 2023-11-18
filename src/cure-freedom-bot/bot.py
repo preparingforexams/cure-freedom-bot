@@ -117,6 +117,7 @@ def convert_non_freedom(match: re.Match) -> str:
     if isinstance(value, str):
         return value
 
+    # this obviously needs a unit check (convert to cm for everything)
     # if is_non_freedom_length_unit(unit_name):
     #     return to_tahocker(match)
 
