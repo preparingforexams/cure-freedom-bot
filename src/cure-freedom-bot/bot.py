@@ -10,6 +10,10 @@ import aldi
 from utils import escape_markdown
 
 
+def is_length_unit(s: str) -> bool:
+    return s.lower() in ["cm", "centimeter", "zentimeter", "m", "meter", "km", "kilometer"]
+
+
 def get_number_from_match(match: re.Match) -> float | str:
     value = match.group("number")
     if value is None:
@@ -101,9 +105,13 @@ def convert_ounces(match: re.Match) -> str:
     return f"{fluid}\n{mass}"
 
 
+def to_tahocker(n: int | float) -> float:
+    return (n * 2.54) / 159.5
+
+
 def convert_inches(match: re.Match) -> str:
     cm = convert_number(match, multiply_by_helper(2.54), "cm")
-    tahocker = convert_number(match, lambda n: (n * 2.54) / 159.5, "tahocker")
+    tahocker = convert_number(match, to_tahocker, "tahocker")
 
     return f"{cm}\n{tahocker}"
 
@@ -123,6 +131,7 @@ def convert_aldi_beer(match: re.Match) -> str:
             rounding_length=3,
         )
     )
+    # noinspection PyBroadException
     try:
         current_price = aldi.get_karlskrone_price()
         result += escape_markdown(
@@ -134,9 +143,23 @@ def convert_aldi_beer(match: re.Match) -> str:
                 rounding_length=3,
             )
         )
-    except:
+    except Exception:
         pass
     return result + " [Aldi Bier](https://song.link/t/120323761)"
+
+
+def convert_non_freedom(match: re.Match) -> str:
+    value = get_number_from_match(match)
+    unit_name = match.group("unit_name")
+
+    if isinstance(value, str):
+        return value
+
+    if is_length_unit(unit_name):
+        tahocker = to_tahocker(value)
+        return f"{tahocker} tahocker"
+
+    return f"{value}{unit_name}"
 
 
 def convert_dollar(match: re.Match) -> str:
@@ -241,6 +264,12 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
             re.IGNORECASE,
         ),
         "process": lambda m: convert_number(m, multiply_by_helper(2.589988), "km\u00b2"),
+    },
+    "non freedom units": {
+        "regex": re.compile(
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>cm|([cz])entimeter|ml|milliliterkm|kilometer|g(ram)?|m(eter)?|c(elsius)?|°C)"
+        ),
+        "process": convert_non_freedom,
     },
 }
 
