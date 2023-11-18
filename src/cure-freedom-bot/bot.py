@@ -6,49 +6,14 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
-from constants import *
 import aldi
+from constants import *
+from convutils import *
 from utils import escape_markdown
 
 
 def is_non_freedom_length_unit(s: str) -> bool:
     return s.lower() in ["cm", "centimeter", "zentimeter", "m", "meter", "km", "kilometer"]
-
-
-def get_number_from_match(match: re.Match) -> float | str:
-    value = match.group("number")
-    if value is None:
-        return "couldn't find a valid number"
-    value = value.replace(",", ".")
-
-    try:
-        return float(value)
-    except ValueError:
-        return f"couldn't parse number (`{value}`) as float"
-
-
-def convert_number(
-    match: re.Match,
-    calc_fn: Callable[[float], float],
-    unit_name: str,
-    escape_md: bool = False,
-    format_result: bool = False,
-    rounding_length: int = 2,
-) -> str:
-    freedom = get_number_from_match(match)
-    result = freedom
-    if isinstance(freedom, float):
-        result = calc_fn(freedom)
-        result = f"{result:.{rounding_length}f}"
-        if format_result:
-            result = unit_name.format(result)
-        else:
-            result = f"{result} {unit_name}"
-
-    if escape_md:
-        return escape_markdown(result)
-    else:
-        return result
 
 
 def multiply_by_helper(factor: float) -> Callable[[float], float]:
@@ -106,13 +71,9 @@ def convert_ounces(match: re.Match) -> str:
     return f"{fluid}\n{mass}"
 
 
-def to_tahocker(n: int | float) -> float:
-    return (n * 2.54) / 159.5
-
-
 def convert_inches(match: re.Match) -> str:
     cm = convert_number(match, multiply_by_helper(INCHES_TO_CENTIMETER), "cm")
-    tahocker = convert_number(match, to_tahocker, "tahocker")
+    tahocker = to_tahocker(match)
 
     return f"{cm}\n{tahocker}"
 
@@ -156,9 +117,8 @@ def convert_non_freedom(match: re.Match) -> str:
     if isinstance(value, str):
         return value
 
-    if is_non_freedom_length_unit(unit_name):
-        tahocker = to_tahocker(value)
-        return f"{tahocker} tahocker"
+    # if is_non_freedom_length_unit(unit_name):
+    #     return to_tahocker(match)
 
     return f"{value}{unit_name}"
 
@@ -182,7 +142,7 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
         "regex": re.compile(
             rf"{regex_match_number_with_prefix}\s*(?P<unit_name>°?F)", re.IGNORECASE
         ),
-        "process": lambda m: convert_number(m, lambda n: (n - 32) * (5 / 9), "°C"),
+        "process": to_celsius,
     },
     "inches": {
         "regex": re.compile(
