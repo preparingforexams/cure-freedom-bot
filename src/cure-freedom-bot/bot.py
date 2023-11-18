@@ -10,7 +10,7 @@ import aldi
 from utils import escape_markdown
 
 
-def is_length_unit(s: str) -> bool:
+def is_non_freedom_length_unit(s: str) -> bool:
     return s.lower() in ["cm", "centimeter", "zentimeter", "m", "meter", "km", "kilometer"]
 
 
@@ -155,7 +155,7 @@ def convert_non_freedom(match: re.Match) -> str:
     if isinstance(value, str):
         return value
 
-    if is_length_unit(unit_name):
+    if is_non_freedom_length_unit(unit_name):
         tahocker = to_tahocker(value)
         return f"{tahocker} tahocker"
 
