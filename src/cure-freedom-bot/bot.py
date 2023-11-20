@@ -136,6 +136,17 @@ def convert_dollar(match: re.Match) -> str:
     return f"{euro:.2f}€"
 
 
+def convert_quart(match: re.Match) -> str:
+    us_liquid = convert_number(match, multiply_by_helper(US_LIQUID_QUART_TO_LITER), "l")
+    us_dry = convert_number(match, multiply_by_helper(US_DRY_QUART_TO_LITER), "l")
+    imperial = convert_number(match, multiply_by_helper(IMPERIAL_QUART_TO_LITER), "l")
+
+    return f"""US liquid: {us_liquid}
+US dry: {us_dry}
+Imperial: {imperial}
+    """
+
+
 regex_match_number_with_prefix = r"(?P<number>[-+]?\d+(:?(:?,|\.)\d+)?)"
 
 units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
@@ -236,6 +247,10 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
             rf"{regex_match_number_with_prefix}\s*(?P<unit_name>cm|([cz])entimeter|ml|milliliterkm|kilometer|g(ram)?|m(eter)?|c(elsius)?|°C)"
         ),
         "process": convert_non_freedom,
+    },
+    "quart": {
+        "regex": re.compile(rf"{regex_match_number_with_prefix}\s*(?P<unit_name>qt|quart)"),
+        "process": convert_quart,
     },
 }
 
