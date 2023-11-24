@@ -29,6 +29,7 @@ def convert_number(
     if isinstance(freedom, float):
         result = calc_fn(freedom)
         result = f"{result:.{rounding_length}f}"
+        result = result.replace(".", ",")
         if format_result:
             result = unit_name.format(result)
         else:
