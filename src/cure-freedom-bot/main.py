@@ -24,7 +24,13 @@ def main(application: Application):
         telegram.ext.CommandHandler("cf", bot.cure, filters=~UpdateType.EDITED_MESSAGE)
     )
     application.add_handler(
+        telegram.ext.CommandHandler("cl", bot.cure, filters=~UpdateType.EDITED_MESSAGE)
+    )
+    application.add_handler(
         telegram.ext.CommandHandler("cure_freedom", bot.cure, filters=~UpdateType.EDITED_MESSAGE)
+    )
+    application.add_handler(
+        telegram.ext.CommandHandler("cure_liberty", bot.cure, filters=~UpdateType.EDITED_MESSAGE)
     )
     application.add_handler(telegram.ext.CommandHandler("supported_units", bot.supported_units))
 
