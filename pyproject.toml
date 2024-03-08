@@ -9,7 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 httpx = "^0.25.0"
-python-telegram-bot = "^20.4"
+python-telegram-bot = "^21.0"
 beautifulsoup4 = "^4.12.2"
 currencyconverter = "^0.17.12"
 
