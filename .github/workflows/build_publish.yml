@@ -24,7 +24,7 @@ jobs:
           subcommand: lint
           path: .
           strict: true
-          namespace: telegram-bots
+          namespace: cure-freedom-bot
 
   build-container-image:
     needs:
