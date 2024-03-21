@@ -6,8 +6,10 @@ on:
   pull_request: { }
 
 jobs:
-  lint:
-    name: "helm lint"
+  validate-renovate-config:
+    uses: BlindfoldedSurgery/renovate-config/.github/workflows/validate.yml@main
+
+  helm-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,7 +30,7 @@ jobs:
 
   build-container-image:
     needs:
-      - lint
+      - helm-lint
     uses: BlindfoldedSurgery/actions-container/.github/workflows/build-image-docker.yml@v3
     with:
       containerfile: Containerfile
