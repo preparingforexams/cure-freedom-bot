@@ -29,8 +29,6 @@ jobs:
   build-container-image:
     needs:
       - lint
-      - unit-test
-      - integration-test
     uses: BlindfoldedSurgery/actions-container/.github/workflows/build-image-docker.yml@v3
     with:
       containerfile: Containerfile
