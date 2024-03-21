@@ -27,50 +27,23 @@ jobs:
           namespace: telegram-bots
 
   build-container-image:
-    runs-on: ubuntu-latest
-    if: success() && github.event_name == 'pull_request'
-    steps:
-      - name: Inject slug/short variables
-        uses: rlespinasse/github-slug-action@v4
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Build container image
-        uses: docker/build-push-action@v5
-        with:
-          push: false
-          context: .
-          file: Containerfile
-          tags: "ghcr.io/${{ env.GITHUB_REPOSITORY_OWNER_PART_SLUG }}/${{ env.GITHUB_REPOSITORY_NAME_PART_SLUG }}:${{ github.sha }}"
-
-  push-container-image:
-    runs-on: ubuntu-latest
-    if: github.ref_name == github.event.repository.default_branch
-    steps:
-      - name: Inject slug/short variables
-        uses: rlespinasse/github-slug-action@v4
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ github.token }}
-      - name: Build and push container image
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          context: .
-          file: Containerfile
-          tags: "ghcr.io/${{ env.GITHUB_REPOSITORY_OWNER_PART_SLUG }}/${{ env.GITHUB_REPOSITORY_NAME_PART_SLUG }}:${{ github.sha }}"
+    needs:
+      - lint
+      - unit-test
+      - integration-test
+    uses: BlindfoldedSurgery/actions-container/.github/workflows/build-image-docker.yml@v3
+    with:
+      file: Containerfile
+      platform: "linux/arm64"
+      push-image: ${{ github.ref_name == github.event.repository.default_branch }}
 
   deploy:
     name: "Publish to k8s"
-    runs-on: ubuntu-latest
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: born-prep
+    container: ghcr.io/bjoernpetersen/helm:2.0.1
     concurrency: production
-    needs: [push-container-image, lint]
+    needs: [build-container-image, lint]
     steps:
       - uses: actions/checkout@v4
       - name: Inject slug/short variables
@@ -88,22 +61,12 @@ jobs:
           subcommand: upgrade
           ref: .
           release_name: cure-freedom-bot
-          namespace: telegram-bots
+          namespace: cure-freedom-bot
           atomic: true
           install: true
-          kubeconfig: ${{ secrets.KUBECONFIG_RAW }}
+          kubeconfig: ${{ secrets.BORN_KUBECONFIG_RAW }}
 
   clean:
-    runs-on: ubuntu-latest
     concurrency: cleanup
-    continue-on-error: true
     needs: [ deploy ]
-    steps:
-      - name: Inject slug/short variables
-        uses: rlespinasse/github-slug-action@v4
-      - name: Clean up old app container images
-        uses: actions/delete-package-versions@v4
-        with:
-          package-name: ${{ env.GITHUB_REPOSITORY_NAME_PART_SLUG }}
-          package-type: container
-          min-versions-to-keep: 10
+    uses: BlindfoldedSurgery/actions-container/.github/workflows/clean.yml@v3

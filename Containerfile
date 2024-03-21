@@ -1,22 +1,14 @@
-FROM python:3.12-slim
+FROM ghcr.io/blindfoldedsurgery/poetry:2.0.0-pipx-3.12-bookworm
 
-RUN apt-get update
-RUN apt-get install -y vim
+COPY [ "poetry.lock", "pyproject.toml", "./" ]
 
-RUN useradd --system --create-home --home-dir /app -s /bin/bash app
-USER app
-ENV PATH=$PATH:/app/.local/bin
+RUN poetry install --no-interaction --ansi --only=main --no-root
 
-WORKDIR /app
+COPY  src/cure_freedom_bot ./src/cure_freedom_bot
 
-RUN pip install pipx==1.2.0 --user --no-cache
-RUN pipx install poetry==1.6.1
-RUN poetry config virtualenvs.create false
+RUN poetry install --no-interaction --ansi --only-root
 
-COPY --chown=app:app [ "poetry.lock", "pyproject.toml", "./" ]
+ARG APP_VERSION
+ENV APP_VERSION=$APP_VERSION
 
-COPY --chown=app:app src/cure-freedom-bot ./src/cure-freedom-bot
-
-RUN poetry install
-
-ENTRYPOINT [ "poetry", "run", "python", "src/cure-freedom-bot/main.py" ]
+ENTRYPOINT [ "tini", "--", "poetry", "run", "python", "-m", "cure_freedom_bot.main" ]
