@@ -1,6 +1,7 @@
 /target
 
 .idea
+.venv/
 *.iml
 
-src/cure-freedom-bot/__pycache__
+src/cure_freedom_bot/__pycache__

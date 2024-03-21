@@ -1,15 +1,14 @@
 [tool.poetry]
 name = "cure-freedom-bot"
-version = "0.1.0"
+version = "1.0.0"
 description = ""
 authors = ["Blindfolded Surgery <team@blindfolded.surgery>"]
 license = "MIT"
-readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
-httpx = "^0.25.0"
-python-telegram-bot = "^20.4"
+python = "~3.12"
+httpx = "*"
+python-telegram-bot = "20.6"
 beautifulsoup4 = "^4.12.2"
 currencyconverter = "^0.17.12"
 
