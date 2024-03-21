@@ -43,7 +43,7 @@ jobs:
     runs-on: born-prep
     container: ghcr.io/bjoernpetersen/helm:2.0.1
     concurrency: production
-    needs: [build-container-image, lint]
+    needs: [build-container-image, helm-lint]
     steps:
       - uses: actions/checkout@v4
       - name: Inject slug/short variables
