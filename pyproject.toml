@@ -8,7 +8,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "~3.12"
 httpx = "*"
-python-telegram-bot = "20.6"
+python-telegram-bot = "20.8"
 beautifulsoup4 = "^4.12.2"
 currencyconverter = "^0.17.12"
 
