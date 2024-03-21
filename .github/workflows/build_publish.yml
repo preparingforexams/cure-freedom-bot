@@ -41,7 +41,7 @@ jobs:
     name: "Publish to k8s"
     if: github.ref_name == github.event.repository.default_branch
     runs-on: born-prep
-    container: ghcr.io/bjoernpetersen/helm:2.0.1
+    container: ghcr.io/bjoernpetersen/helm:2.1.0
     concurrency: production
     needs: [build-container-image, helm-lint]
     steps:
