@@ -33,7 +33,7 @@ jobs:
       - integration-test
     uses: BlindfoldedSurgery/actions-container/.github/workflows/build-image-docker.yml@v3
     with:
-      file: Containerfile
+      containerfile: Containerfile
       platform: "linux/arm64"
       push-image: ${{ github.ref_name == github.event.repository.default_branch }}
 
