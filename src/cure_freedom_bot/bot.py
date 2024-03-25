@@ -1,15 +1,14 @@
-import re
-from typing import Callable, Tuple, Union
+from typing import Tuple, Union
 
 import currency_converter
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
-import aldi
-from constants import *
-from convutils import *
-from utils import escape_markdown
+from cure_freedom_bot import aldi
+from cure_freedom_bot.constants import *
+from cure_freedom_bot.convutils import *
+from cure_freedom_bot.utils import escape_markdown
 
 
 def is_non_freedom_length_unit(s: str) -> bool:

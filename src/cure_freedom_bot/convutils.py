@@ -1,7 +1,7 @@
 import re
 from typing import Callable
 
-from utils import escape_markdown
+from cure_freedom_bot.utils import escape_markdown
 
 
 def get_number_from_match(match: re.Match) -> float | str:

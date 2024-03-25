@@ -2,8 +2,6 @@ import inspect
 import socket
 from typing import Dict, Optional
 
-import requests as requests
-import urllib3 as urllib3
 
 from logger import create_logger
 

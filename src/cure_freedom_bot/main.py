@@ -6,8 +6,8 @@ import telegram.ext
 from telegram.ext import ApplicationBuilder, Application
 from telegram.ext.filters import UpdateType
 
-import bot
-from logger import create_logger
+from cure_freedom_bot import bot
+from cure_freedom_bot.logger import create_logger
 
 
 def get_env_or_die(env_variable: str, *, exit_code: int = 1) -> str:
