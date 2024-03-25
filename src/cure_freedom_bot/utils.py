@@ -1,7 +1,7 @@
 import inspect
-import socket
 from typing import Dict, Optional
 
+import httpx
 
 from cure_freedom_bot.logger import create_logger
 
@@ -41,17 +41,13 @@ def get_json_from_url(url: str, *, headers: Dict = None) -> Optional[Dict]:
     log = create_logger(inspect.currentframe().f_code.co_name)
 
     try:
-        response = requests.get(url, headers=headers)
+        response = httpx.get(url, headers=headers)
         content = response.json()
-    except (
-        requests.exceptions.ConnectionError,
-        socket.gaierror,
-        urllib3.exceptions.MaxRetryError,
-    ) as e:
+    except httpx.HTTPError as e:
         log.exception("failed to communicate with jokes api")
         raise RequestError(e)
 
-    if not response.ok:
+    if not response.is_success:
         raise RequestError(f"[{response.status_code}]{response.text}")
 
     return content

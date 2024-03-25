@@ -1,13 +1,18 @@
-from typing import Tuple, Union
+from typing import Tuple, Union, Callable
 
 import currency_converter
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
-
+import re
 from cure_freedom_bot import aldi
 from cure_freedom_bot.constants import *
-from cure_freedom_bot.convutils import *
+from cure_freedom_bot.convutils import (
+    to_celsius,
+    to_tahocker,
+    convert_number,
+    get_number_from_match,
+)
 from cure_freedom_bot.utils import escape_markdown
 
 
