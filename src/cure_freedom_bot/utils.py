@@ -3,7 +3,7 @@ import socket
 from typing import Dict, Optional
 
 
-from logger import create_logger
+from cure_freedom_bot.logger import create_logger
 
 
 def escape_markdown(text: str) -> str:
