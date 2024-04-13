@@ -1,0 +1,7 @@
+appVersion: latest
+
+deployment:
+  name: cure-freedom-bot
+  image: ghcr.io/preparingforexams/cure-freedom-bot
+  labels:
+    app: cure-freedom-bot
