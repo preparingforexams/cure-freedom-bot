@@ -3,7 +3,7 @@ import os
 import sys
 
 import telegram.ext
-from telegram.ext import ApplicationBuilder, Application
+from telegram.ext import Application, ApplicationBuilder
 from telegram.ext.filters import UpdateType
 
 from cure_freedom_bot import bot
@@ -11,7 +11,12 @@ from cure_freedom_bot.logger import create_logger
 
 
 def get_env_or_die(env_variable: str, *, exit_code: int = 1) -> str:
-    logger = create_logger(inspect.currentframe().f_code.co_name)
+    frame = inspect.currentframe()
+    if frame is None:
+        logger = create_logger(__name__)
+    else:
+        logger = create_logger(frame.f_code.co_name)
+
     if token := os.getenv(env_variable):
         return token
 
@@ -27,12 +32,18 @@ def main(application: Application):
         telegram.ext.CommandHandler("cl", bot.cure, filters=~UpdateType.EDITED_MESSAGE)
     )
     application.add_handler(
-        telegram.ext.CommandHandler("cure_freedom", bot.cure, filters=~UpdateType.EDITED_MESSAGE)
+        telegram.ext.CommandHandler(
+            "cure_freedom", bot.cure, filters=~UpdateType.EDITED_MESSAGE
+        )
     )
     application.add_handler(
-        telegram.ext.CommandHandler("cure_liberty", bot.cure, filters=~UpdateType.EDITED_MESSAGE)
+        telegram.ext.CommandHandler(
+            "cure_liberty", bot.cure, filters=~UpdateType.EDITED_MESSAGE
+        )
     )
-    application.add_handler(telegram.ext.CommandHandler("supported_units", bot.supported_units))
+    application.add_handler(
+        telegram.ext.CommandHandler("supported_units", bot.supported_units)
+    )
 
     application.run_polling()
 

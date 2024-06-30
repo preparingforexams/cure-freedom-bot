@@ -37,8 +37,12 @@ class RequestError(Exception):
     pass
 
 
-def get_json_from_url(url: str, *, headers: Dict = None) -> Optional[Dict]:
-    log = create_logger(inspect.currentframe().f_code.co_name)
+def get_json_from_url(url: str, *, headers: dict | None = None) -> Optional[Dict]:
+    frame = inspect.currentframe()
+    if frame is None:
+        log = create_logger(__name__)
+    else:
+        log = create_logger(frame.f_code.co_name)
 
     try:
         response = httpx.get(url, headers=headers)

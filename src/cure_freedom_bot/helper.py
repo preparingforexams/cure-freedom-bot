@@ -1,7 +1,7 @@
 import dataclasses
 from abc import abstractmethod
 from enum import Enum
-from typing import List
+from typing import Any, List
 
 import telegram.constants
 from telegram import Update
@@ -25,11 +25,13 @@ class Message:
 class TextMessage(Message):
     async def send(self, update: Update, **kwargs):
         messages = self.split()
-        params = {"parse_mode": telegram.constants.ParseMode.MARKDOWN_V2}
+        params: dict[str, Any] = {
+            "parse_mode": telegram.constants.ParseMode.MARKDOWN_V2
+        }
         params.update(**kwargs)
 
         for message in messages:
-            await update.effective_chat.send_message(text=message, **params)
+            await update.effective_chat.send_message(text=message, **params)  # type: ignore
             params["disable_notification"] = True
 
     type = MessageType.Text
@@ -75,7 +77,7 @@ class PhotoMessage(Message):
     caption: str = ""
 
     async def send(self, update: Update):
-        await update.effective_message.reply_photo(
+        await update.effective_message.reply_photo(  # type: ignore[union-attr]
             self.url,
             caption=self.caption[:1024],
             parse_mode=self.parse_mode,

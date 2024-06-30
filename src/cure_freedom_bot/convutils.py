@@ -1,5 +1,5 @@
 import re
-from typing import Callable
+from typing import Callable, cast
 
 from cure_freedom_bot.utils import escape_markdown
 
@@ -35,6 +35,7 @@ def convert_number(
         else:
             result = f"{result} {unit_name}"
 
+    result = cast(str, result)
     if escape_md:
         return escape_markdown(result)
     else:

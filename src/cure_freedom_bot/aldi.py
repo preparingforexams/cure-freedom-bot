@@ -9,7 +9,12 @@ def get_karlskrone_price() -> float:
     response = httpx.get(url, follow_redirects=True)
     bs4 = BeautifulSoup(response.content, "html.parser")
     element = bs4.find("div", attrs={"data-t-name": "ArticleIntro"})
-    data_article = element.attrs["data-article"]
+
+    if element is None:
+        # Shrug emoji
+        return 1.0
+
+    data_article = element.attrs["data-article"]  # type: ignore[union-attr]
     data_article = json.loads(data_article)
     price = data_article["productInfo"]["priceWithTax"]
 

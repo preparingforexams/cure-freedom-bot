@@ -1,23 +1,32 @@
-from typing import Tuple, Union, Callable
+import re
+from typing import Callable, Union, cast
 
 import currency_converter
-from telegram import Update
+from telegram import Message, Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
-import re
+
 from cure_freedom_bot import aldi
 from cure_freedom_bot.constants import *
 from cure_freedom_bot.convutils import (
-    to_celsius,
-    to_tahocker,
     convert_number,
     get_number_from_match,
+    to_celsius,
+    to_tahocker,
 )
 from cure_freedom_bot.utils import escape_markdown
 
 
 def is_non_freedom_length_unit(s: str) -> bool:
-    return s.lower() in ["cm", "centimeter", "zentimeter", "m", "meter", "km", "kilometer"]
+    return s.lower() in [
+        "cm",
+        "centimeter",
+        "zentimeter",
+        "m",
+        "meter",
+        "km",
+        "kilometer",
+    ]
 
 
 def multiply_by_helper(factor: float) -> Callable[[float], float]:
@@ -169,13 +178,17 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
     },
     "pound": {
         "regex": re.compile(
-            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(:?pound|lb)(:?s)?)", re.IGNORECASE
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(:?pound|lb)(:?s)?)",
+            re.IGNORECASE,
         ),
-        "process": lambda m: convert_number(m, multiply_by_helper(POUND_TO_GRAM), "gram"),
+        "process": lambda m: convert_number(
+            m, multiply_by_helper(POUND_TO_GRAM), "gram"
+        ),
     },
     "ounces": {
         "regex": re.compile(
-            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(:?fl\.)?oz|ounces)", re.IGNORECASE
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>(:?fl\.)?oz|ounces)",
+            re.IGNORECASE,
         ),
         "process": convert_ounces,
     },
@@ -187,27 +200,33 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
     },
     "cups": {
         "regex": re.compile(
-            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>cup|endgegner)", re.IGNORECASE
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>cup|endgegner)",
+            re.IGNORECASE,
         ),
         "process": convert_cups,
     },
     "tablespoon": {
         "regex": re.compile(
-            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>tablespoon|tbsp)", re.IGNORECASE
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>tablespoon|tbsp)",
+            re.IGNORECASE,
         ),
         "process": convert_tablespoon,
     },
     "teaspoon": {
         "regex": re.compile(
-            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>teaspoon|tsp)", re.IGNORECASE
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>teaspoon|tsp)",
+            re.IGNORECASE,
         ),
         "process": convert_teaspoon,
     },
     "mile": {
         "regex": re.compile(
-            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>mi(?:le)?)", re.IGNORECASE
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>mi(?:le)?)",
+            re.IGNORECASE,
         ),
-        "process": lambda m: convert_number(m, multiply_by_helper(MILE_TO_KILOMETER), "km"),
+        "process": lambda m: convert_number(
+            m, multiply_by_helper(MILE_TO_KILOMETER), "km"
+        ),
     },
     "yard": {
         "regex": re.compile(
@@ -217,14 +236,16 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
     },
     "aldi beer": {
         "regex": re.compile(
-            rf".*?{regex_match_number_with_prefix}\s*(?P<unit_name>(€|euro|ct|cent))", re.IGNORECASE
+            rf".*?{regex_match_number_with_prefix}\s*(?P<unit_name>(€|euro|ct|cent))",
+            re.IGNORECASE,
         ),
         "process": convert_aldi_beer,
-        "parse_mode": ParseMode.MARKDOWN_V2,
+        "parse_mode": ParseMode.MARKDOWN_V2,  # type: ignore[dict-item]
     },
     "USD": {
         "regex": re.compile(
-            rf".*?{regex_match_number_with_prefix}\s*(?P<unit_name>(\$|usd|dollar))", re.IGNORECASE
+            rf".*?{regex_match_number_with_prefix}\s*(?P<unit_name>(\$|usd|dollar))",
+            re.IGNORECASE,
         ),
         "process": convert_dollar,
     },
@@ -253,7 +274,9 @@ units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
         "process": convert_non_freedom,
     },
     "quart": {
-        "regex": re.compile(rf"{regex_match_number_with_prefix}\s*(?P<unit_name>qt|quart)"),
+        "regex": re.compile(
+            rf"{regex_match_number_with_prefix}\s*(?P<unit_name>qt|quart)"
+        ),
         "process": convert_quart,
     },
 }
@@ -267,7 +290,7 @@ def match_unit(unit: dict, args: str) -> re.Match | None:
     return None
 
 
-def find_matching_unit(args: str) -> Tuple[re.Match, dict] | Tuple[None, None]:
+def find_matching_unit(args: str) -> tuple[re.Match, dict] | tuple[None, None]:
     fmatch, funit = None, None
     longest_unitname_match = 0
 
@@ -278,23 +301,30 @@ def find_matching_unit(args: str) -> Tuple[re.Match, dict] | Tuple[None, None]:
                 longest_unitname_match = unitname_length
                 fmatch, funit = match, unit
 
-    return fmatch, funit
+    return fmatch, funit  # type: ignore[return-value]
 
 
 async def cure(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    args = " ".join(context.args)
+    args = " ".join(context.args)  # type: ignore[arg-type]
     match, unit = find_matching_unit(args)
+    effective_message = update.effective_message
+
+    if effective_message is None:
+        raise ValueError("Can't use non-message update")
+
     if match is None or unit is None:
-        await update.effective_message.reply_text("couldn't find a valid unit to convert")
+        await effective_message.reply_text("couldn't find a valid unit to convert")
     else:
         message = unit["process"](match)
         if "parse_mode" in unit and unit["parse_mode"] is not None:
-            await update.effective_message.reply_text(
+            await effective_message.reply_text(
                 message, parse_mode=unit["parse_mode"], disable_web_page_preview=True
             )
         else:
-            await update.effective_message.reply_text(message, disable_web_page_preview=True)
+            await effective_message.reply_text(message, disable_web_page_preview=True)
 
 
 async def supported_units(update: Update, _: ContextTypes.DEFAULT_TYPE):
-    await update.effective_message.reply_text("\n".join(str(key) for key in units.keys()))
+    await cast(Message, update.effective_message).reply_text(
+        "\n".join(str(key) for key in units.keys())
+    )
