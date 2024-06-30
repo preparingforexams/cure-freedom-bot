@@ -4,6 +4,9 @@ version = "1.0.0"
 description = ""
 authors = ["Blindfolded Surgery <team@blindfolded.surgery>"]
 license = "MIT"
+packages = [
+    { include = "cure_freedom_bot", from = "src" }
+]
 
 [tool.poetry.dependencies]
 python = "~3.12"
@@ -12,9 +15,16 @@ python-telegram-bot = "21.1.1"
 beautifulsoup4 = "^4.12.2"
 currencyconverter = "^0.17.12"
 
+[tool.poetry.group.dev.dependencies]
+mypy = "~1.10"
+pytest = "^8.0.0"
+ruff = "0.5.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.black]
-line-length = 100
+[tool.ruff.lint]
+extend-select = [
+    "I001",
+]
