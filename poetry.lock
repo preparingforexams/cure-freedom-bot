@@ -65,13 +65,13 @@ files = [
 
 [[package]]
 name = "currencyconverter"
-version = "0.17.24"
+version = "0.17.26"
 description = "A currency converter using the European Central Bank data."
 optional = false
 python-versions = ">=3.6.1"
 files = [
-    {file = "CurrencyConverter-0.17.24-py3-none-any.whl", hash = "sha256:808b04d9cdc047af19563ec213d265f964344ff51cd031f2c4fd1ebebfc69d15"},
-    {file = "currencyconverter-0.17.24.tar.gz", hash = "sha256:49860987be0a350fcecd6005554f5a99141f3803b14880d5deebc49aa8fdb5b5"},
+    {file = "CurrencyConverter-0.17.26-py3-none-any.whl", hash = "sha256:7e900d9c7ea26132c379e2a4212fdb82bfadea0b5cbea1c7bed2d84fecd1b8fb"},
+    {file = "currencyconverter-0.17.26.tar.gz", hash = "sha256:dc2725fc664c0793debc47c5315adea2cc12e2690d47b0c4c17f07720803c897"},
 ]
 
 [[package]]
