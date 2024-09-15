@@ -1,5 +1,4 @@
 import inspect
-from typing import Dict, Optional
 
 import httpx
 
@@ -37,7 +36,7 @@ class RequestError(Exception):
     pass
 
 
-def get_json_from_url(url: str, *, headers: dict | None = None) -> Optional[Dict]:
+def get_json_from_url(url: str, *, headers: dict | None = None) -> dict | None:
     frame = inspect.currentframe()
     if frame is None:
         log = create_logger(__name__)

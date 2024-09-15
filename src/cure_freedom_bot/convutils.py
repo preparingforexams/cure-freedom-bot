@@ -1,5 +1,6 @@
 import re
-from typing import Callable, cast
+from collections.abc import Callable
+from typing import cast
 
 from cure_freedom_bot.utils import escape_markdown
 

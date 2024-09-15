@@ -20,7 +20,7 @@ def get_env_or_die(env_variable: str, *, exit_code: int = 1) -> str:
     if token := os.getenv(env_variable):
         return token
 
-    logger.critical(f"failed to retrieve token from environment (`{env_variable}`)")
+    logger.critical("failed to retrieve token from environment (%s)", env_variable)
     sys.exit(exit_code)
 
 

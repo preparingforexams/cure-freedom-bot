@@ -1,5 +1,6 @@
 import re
-from typing import Callable, Union, cast
+from collections.abc import Callable
+from typing import cast
 
 import currency_converter
 from telegram import Message, Update
@@ -162,7 +163,7 @@ Imperial: {imperial}
 
 regex_match_number_with_prefix = r"(?P<number>[-+]?\d+(:?(:?,|\.)\d+)?)"
 
-units: dict[str, dict[str, Union[re.Pattern, Callable[[re.Match], str]]]] = {
+units: dict[str, dict[str, re.Pattern | Callable[[re.Match], str]]] = {
     "fahrenheit": {
         "regex": re.compile(
             rf"{regex_match_number_with_prefix}\s*(?P<unit_name>°?F)", re.IGNORECASE

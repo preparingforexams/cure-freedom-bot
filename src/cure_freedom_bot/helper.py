@@ -1,7 +1,7 @@
 import dataclasses
 from abc import abstractmethod
 from enum import Enum
-from typing import Any, List
+from typing import Any
 
 import telegram.constants
 from telegram import Update
@@ -39,9 +39,9 @@ class TextMessage(Message):
     split_by = "\n"
     join_with = "\n"
 
-    def split(self) -> List[str]:
+    def split(self) -> list[str]:
         message_length = 4096
-        messages: List[List[str]] = []
+        messages: list[list[str]] = []
         current_message_length = 0
         current_message_index = 0
         join_by_length = len(self.join_with)
